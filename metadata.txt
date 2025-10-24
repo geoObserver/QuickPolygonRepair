@@ -1,15 +1,21 @@
 [general]
 name=QuickPolygonRepair
-email=news@geoobserver.de
-author=Mike Elstermann (#geoObserver)
 description=Das Plugin prüft einen aktivierten Polygon-Layer auf Geometriefehler und bietet an, diese auch zu reparieren / The plugin checks an activated polygon layer for geometry errors and also offers to repair them.
-about = (23.06.2025)</br>Das Plugin prüft einen aktivierten Polygon-Layer auf Geometriefehler und bietet an, diese auch zu reparieren / The plugin checks an activated polygon layer for geometry errors and also offers to repair them.
-version=0.2
-qgisMinimumVersion=3.0
+about = (09.10.2025)</br>Das Plugin prüft einen aktivierten Polygon-Layer auf Geometriefehler und bietet an, diese auch zu reparieren / The plugin checks an activated polygon layer for geometry errors and also offers to repair them.
+version=0.3.1
+author=Mike Elstermann (#geoObserver)
+email=news@geoobserver.de
+category=Vector
+qgisMinimumVersion=3.44
+qgisMaximumVersion=4.99
+experimental=False
+deprecated=False
+supportsQt6=True
 icon=logo.png
 tracker = https://github.com/geoObserver/QuickPolygonRepair/issues/
 repository = https://github.com/geoObserver/QuickPolygonRepair/
 homepage = https://geoobserver.de/qgis-plugin-QuickPolygonRepair/
-category = Plugins
 changelog = 0.1 ... Initiale Version / Initial version
 	0.2 ... Formulierungen, Löschen doppelter Stützstellen, Einbettung in ToolBar "#geoObserver Tools"  / Wording, Delete Duplicate Nodes, Embedded in ToolBar “#geoObserver Tools”
+	0.3 ... Qt6 Copmatible
+	0.3.1 ... Qt6 compatible (update qgisMinimumVersion=3.44)
