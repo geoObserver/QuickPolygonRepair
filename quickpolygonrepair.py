@@ -1,5 +1,16 @@
-# -*- coding: utf-8 -*-
-# QuickPolygonRepair – Qt6-kompatible Version (QGIS 3.34+)
+# -----------------------------------------------------------------------------#
+# Title:       QuickPolygonRepair                                              #
+# Author:      Mike Elstermann (#geoObserver)                                  #
+# Version:     v0.4                                                            #
+# Created:     15.10.2025                                                      #
+# Last Change: 26.02.2026                                                      #
+# see also:    https://geoobserver.de/qgis-plugins/                            #
+#                                                                              #
+# This file contains code generated with assistance from an AI                 #
+# No warranty is provided for AI-generated portions.                           #
+# Human review and modification performed by: Mike Elstermann (#geoObserver)   #
+# -----------------------------------------------------------------------------#
+
 import os
 import time
 from qgis.PyQt.QtWidgets import QAction, QMessageBox, QToolButton, QToolBar, QPushButton
@@ -11,6 +22,20 @@ from qgis.core import (
 )
 
 plugin_dir = os.path.dirname(__file__)
+
+# Qt5 / Qt6 Enum-Kompatibilität
+try:
+    # Qt6
+    MSG_ICON_QUESTION = QMessageBox.Icon.Question
+    MSG_ROLE_REJECT = QMessageBox.ButtonRole.RejectRole
+    MSG_ROLE_NO = QMessageBox.ButtonRole.NoRole
+    MSG_ROLE_YES = QMessageBox.ButtonRole.YesRole
+except AttributeError:
+    # Qt5
+    MSG_ICON_QUESTION = QMessageBox.Question
+    MSG_ROLE_REJECT = QMessageBox.RejectRole
+    MSG_ROLE_NO = QMessageBox.NoRole
+    MSG_ROLE_YES = QMessageBox.YesRole
 
 
 class QuickPolygonRepair:
@@ -25,14 +50,14 @@ class QuickPolygonRepair:
         parent = self.iface.mainWindow() if hasattr(self.iface, "mainWindow") else None
         msg_box = QMessageBox(parent)
         # Qt6: Enums sind verschachtelt; Icon.Question statt QMessageBox.Question
-        msg_box.setIcon(QMessageBox.Icon.Question)
+        msg_box.setIcon(MSG_ICON_QUESTION)
         msg_box.setWindowTitle("Try to repair?")
         msg_box.setText(myText)
 
         # Buttons hinzufügen (mit ButtonRole)
-        btn_cancel = msg_box.addButton("cancel", QMessageBox.ButtonRole.RejectRole)
-        btn_repair = msg_box.addButton("repair only", QMessageBox.ButtonRole.NoRole)
-        btn_repair_del = msg_box.addButton("repair + delete duplicate nodes", QMessageBox.ButtonRole.YesRole)
+        btn_cancel = msg_box.addButton("cancel", MSG_ROLE_REJECT)
+        btn_repair = msg_box.addButton("repair only", MSG_ROLE_NO)
+        btn_repair_del = msg_box.addButton("repair + delete duplicate nodes", MSG_ROLE_YES)
 
         # Dialog anzeigen
         msg_box.exec()
@@ -50,11 +75,11 @@ class QuickPolygonRepair:
 
     def initGui(self):
         # Gemeinsame Toolbar finden oder anlegen
-        self.toolbar = self.iface.mainWindow().findChild(QToolBar, "#geoObserverTools")
+        self.toolbar = self.iface.mainWindow().findChild(QToolBar, "geoObserverTools")
         if not self.toolbar:
-            self.toolbar = self.iface.addToolBar("#geoObserver Tools")
-            self.toolbar.setObjectName("#geoObserverTools")
-            self.toolbar.setToolTip("#geoObserver Tools ...")
+            self.toolbar = self.iface.addToolBar("geoObserverTools")
+            self.toolbar.setObjectName("geoObserverTools")
+            self.toolbar.setToolTip("geoObserver Tools ...")
 
         icon = os.path.join(plugin_dir, "logo.png")
         self.action = QAction(QIcon(icon), "QuickPolygonRepair", self.iface.mainWindow())
@@ -107,11 +132,9 @@ class QuickPolygonRepair:
             or layer.type() != QgsMapLayer.VectorLayer
             or QgsWkbTypes.geometryType(layer.wkbType()) != QgsWkbTypes.PolygonGeometry
         ):
-            # pushWarning/pushInfo sind bequemer als numeric pushMessage
             try:
                 self.iface.messageBar().pushWarning("QuickPolygonRepair", myMessage1)
             except Exception:
-                # Fallback: older API
                 self.iface.messageBar().pushMessage("QuickPolygonRepair", myMessage1)
             return
 
@@ -121,7 +144,6 @@ class QuickPolygonRepair:
         valid_features = 0
         invalid_ids = []
 
-        # 1) Ungültige Geometrien auflisten
         for feature in layer.getFeatures():
             geom = feature.geometry()
             valid_features += 1
@@ -155,7 +177,6 @@ class QuickPolygonRepair:
                     for fid in invalid_ids:
                         feature = QgsFeature(layer.getFeature(fid))
                         fixed_geom = feature.geometry().makeValid()
-                        # makeValid kann MultiPolygon/Polygon liefern, selten auch Collections
                         if fixed_geom and fixed_geom.isGeosValid():
                             layer.changeGeometry(fid, fixed_geom)
 
@@ -169,7 +190,6 @@ class QuickPolygonRepair:
 
                 layer.removeSelection()
 
-                # 2) Optional: Duplikatknoten entfernen
                 if antwort == "repair + delete":
                     print("| M6: Deleting duplicate nodes ...")
                     with edit(layer):
@@ -244,3 +264,4 @@ class QuickPolygonRepair:
         endtime = time.time()
         formatted_time = time.strftime("%H:%M:%S", time.localtime(endtime))
         print(f"+--- E N D ------- {formatted_time} -------------------------------")
+        
