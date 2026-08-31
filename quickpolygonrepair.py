@@ -1,9 +1,9 @@
 # -----------------------------------------------------------------------------#
 # Title:       QuickPolygonRepair                                              #
 # Author:      Mike Elstermann (#geoObserver)                                  #
-# Version:     v0.4                                                            #
+# Version:     v0.5                                                            #
 # Created:     15.10.2025                                                      #
-# Last Change: 26.02.2026                                                      #
+# Last Change: 31.08.2026                                                      #
 # see also:    https://geoobserver.de/qgis-plugins/                            #
 #                                                                              #
 # This file contains code generated with assistance from an AI                 #
@@ -13,12 +13,22 @@
 
 import os
 import time
-from qgis.PyQt.QtWidgets import QAction, QMessageBox, QToolButton, QToolBar, QPushButton
+from qgis.PyQt.QtWidgets import (
+    QAction,
+    QMessageBox,
+    QToolButton,
+    QToolBar,
+    QPushButton,
+)
 from qgis.PyQt.QtGui import QIcon
 from qgis.utils import iface
 from qgis.core import (
-    QgsMapLayer, QgsWkbTypes, edit,
-    QgsGeometry, QgsFeature, QgsPointXY
+    QgsMapLayer,
+    QgsWkbTypes,
+    edit,
+    QgsGeometry,
+    QgsFeature,
+    QgsPointXY,
 )
 
 plugin_dir = os.path.dirname(__file__)
@@ -47,7 +57,11 @@ class QuickPolygonRepair:
     # Dialog
     def frage_nutzer(self, myText):
         # Parent setzen, damit das Dialog-Fenster modal zur QGIS-Hauptfenster ist
-        parent = self.iface.mainWindow() if hasattr(self.iface, "mainWindow") else None
+        parent = (
+            self.iface.mainWindow()
+            if hasattr(self.iface, "mainWindow")
+            else None
+        )
         msg_box = QMessageBox(parent)
         # Qt6: Enums sind verschachtelt; Icon.Question statt QMessageBox.Question
         msg_box.setIcon(MSG_ICON_QUESTION)
@@ -57,7 +71,9 @@ class QuickPolygonRepair:
         # Buttons hinzufügen (mit ButtonRole)
         btn_cancel = msg_box.addButton("cancel", MSG_ROLE_REJECT)
         btn_repair = msg_box.addButton("repair only", MSG_ROLE_NO)
-        btn_repair_del = msg_box.addButton("repair + delete duplicate nodes", MSG_ROLE_YES)
+        btn_repair_del = msg_box.addButton(
+            "repair + delete duplicate nodes", MSG_ROLE_YES
+        )
 
         # Dialog anzeigen
         msg_box.exec()
@@ -75,14 +91,18 @@ class QuickPolygonRepair:
 
     def initGui(self):
         # Gemeinsame Toolbar finden oder anlegen
-        self.toolbar = self.iface.mainWindow().findChild(QToolBar, "geoObserverTools")
+        self.toolbar = self.iface.mainWindow().findChild(
+            QToolBar, "geoObserverTools"
+        )
         if not self.toolbar:
             self.toolbar = self.iface.addToolBar("geoObserverTools")
             self.toolbar.setObjectName("geoObserverTools")
             self.toolbar.setToolTip("geoObserver Tools ...")
 
-        icon = os.path.join(plugin_dir, "logo.png")
-        self.action = QAction(QIcon(icon), "QuickPolygonRepair", self.iface.mainWindow())
+        icon = os.path.join(plugin_dir, "logo.svg")
+        self.action = QAction(
+            QIcon(icon), "QuickPolygonRepair", self.iface.mainWindow()
+        )
         self.action.triggered.connect(self.run)
         self.toolbar.addAction(self.action)
         self.actions.append(self.action)
@@ -120,22 +140,27 @@ class QuickPolygonRepair:
     def run(self):
         starttime = time.time()
         formatted_time = time.strftime("%H:%M:%S", time.localtime(starttime))
-        print(f"\n\n+--- S T A R T --- {formatted_time} -------------------------------")
+        print(
+            f"\n\n+--- S T A R T --- {formatted_time} -------------------------------"
+        )
 
         layer = self.iface.activeLayer()
-        myMessage1 = (
-            "No active polygon layer found,&nbsp;please activate one polygon layer."
-        )
+        myMessage1 = "No active polygon layer found,&nbsp;please activate one polygon layer."
 
         if (
             not layer
             or layer.type() != QgsMapLayer.VectorLayer
-            or QgsWkbTypes.geometryType(layer.wkbType()) != QgsWkbTypes.PolygonGeometry
+            or QgsWkbTypes.geometryType(layer.wkbType())
+            != QgsWkbTypes.PolygonGeometry
         ):
             try:
-                self.iface.messageBar().pushWarning("QuickPolygonRepair", myMessage1)
+                self.iface.messageBar().pushWarning(
+                    "QuickPolygonRepair", myMessage1
+                )
             except Exception:
-                self.iface.messageBar().pushMessage("QuickPolygonRepair", myMessage1)
+                self.iface.messageBar().pushMessage(
+                    "QuickPolygonRepair", myMessage1
+                )
             return
 
         if layer.isEditable():
@@ -163,7 +188,7 @@ class QuickPolygonRepair:
             except Exception:
                 self.iface.messageBar().pushMessage(
                     "QuickPolygonRepair",
-                    f"NotOK: {len(invalid_ids)} from {valid_features} polygons are not valid in layer '{layer.name()}'."
+                    f"NotOK: {len(invalid_ids)} from {valid_features} polygons are not valid in layer '{layer.name()}'.",
                 )
 
             antwort = self.frage_nutzer(
@@ -186,7 +211,9 @@ class QuickPolygonRepair:
                         "Repair attempt completed. Please start a new test...",
                     )
                 except Exception:
-                    self.iface.messageBar().pushMessage("QuickPolygonRepair", "Repair attempt completed.")
+                    self.iface.messageBar().pushMessage(
+                        "QuickPolygonRepair", "Repair attempt completed."
+                    )
 
                 layer.removeSelection()
 
@@ -205,7 +232,9 @@ class QuickPolygonRepair:
                                 rings = original_geom.asPolygon()
                                 cleaned_rings = self.clean_rings(rings)
                                 if cleaned_rings:
-                                    new_geom = QgsGeometry.fromPolygonXY(cleaned_rings)
+                                    new_geom = QgsGeometry.fromPolygonXY(
+                                        cleaned_rings
+                                    )
 
                             elif ft == QgsWkbTypes.MultiPolygon:
                                 polys = original_geom.asMultiPolygon()
@@ -215,16 +244,22 @@ class QuickPolygonRepair:
                                     if cr:
                                         cleaned_polys.append(cr)
                                 if len(cleaned_polys) == 1:
-                                    new_geom = QgsGeometry.fromPolygonXY(cleaned_polys[0])
+                                    new_geom = QgsGeometry.fromPolygonXY(
+                                        cleaned_polys[0]
+                                    )
                                 elif len(cleaned_polys) > 1:
-                                    new_geom = QgsGeometry.fromMultiPolygonXY(cleaned_polys)
+                                    new_geom = QgsGeometry.fromMultiPolygonXY(
+                                        cleaned_polys
+                                    )
 
                             elif ft == QgsWkbTypes.GeometryCollection:
                                 collected_polys = []
                                 for part in original_geom.constParts():
                                     part_clone = part.clone()
                                     part_geom = QgsGeometry(part_clone)
-                                    pft = QgsWkbTypes.flatType(part_geom.wkbType())
+                                    pft = QgsWkbTypes.flatType(
+                                        part_geom.wkbType()
+                                    )
 
                                     if pft == QgsWkbTypes.Polygon:
                                         rings = part_geom.asPolygon()
@@ -239,11 +274,19 @@ class QuickPolygonRepair:
                                                 collected_polys.append(cr)
 
                                 if len(collected_polys) == 1:
-                                    new_geom = QgsGeometry.fromPolygonXY(collected_polys[0])
+                                    new_geom = QgsGeometry.fromPolygonXY(
+                                        collected_polys[0]
+                                    )
                                 elif len(collected_polys) > 1:
-                                    new_geom = QgsGeometry.fromMultiPolygonXY(collected_polys)
+                                    new_geom = QgsGeometry.fromMultiPolygonXY(
+                                        collected_polys
+                                    )
 
-                            if new_geom and new_geom.isGeosValid() and not new_geom.equals(original_geom):
+                            if (
+                                new_geom
+                                and new_geom.isGeosValid()
+                                and not new_geom.equals(original_geom)
+                            ):
                                 layer.changeGeometry(feature.id(), new_geom)
 
                     print("| M7: All duplicate points have been removed.")
@@ -259,9 +302,12 @@ class QuickPolygonRepair:
                     f"(runtime: {round(runtime, 3)} sec.)",
                 )
             except Exception:
-                self.iface.messageBar().pushMessage("QuickPolygonRepair", "All polygons are valid.")
+                self.iface.messageBar().pushMessage(
+                    "QuickPolygonRepair", "All polygons are valid."
+                )
 
         endtime = time.time()
         formatted_time = time.strftime("%H:%M:%S", time.localtime(endtime))
-        print(f"+--- E N D ------- {formatted_time} -------------------------------")
-        
+        print(
+            f"+--- E N D ------- {formatted_time} -------------------------------"
+        )
